@@ -36,6 +36,14 @@ class KeyStore @Autowired constructor(
     }
 
 
+    fun getKey(alias: String): Optional<KeyInformation> {
+        return keyRepository.findByAlias(alias)
+    }
+
+    fun getCurrentKey(): Optional<KeyInformation> {
+        return keyRepository.findFirstByOrderByExpiryDateDesc()
+    }
+
     private fun generateSecretKey(algorithm: String): SecretKey {
         return try {
             val keyGenerator = KeyGenerator.getInstance(algorithm)
@@ -44,14 +52,6 @@ class KeyStore @Autowired constructor(
         } catch (e: NoSuchAlgorithmException) {
             throw RuntimeException("$algorithm algorithm not available", e)
         }
-    }
-
-    fun getKey(alias: String): Optional<KeyInformation> {
-        return keyRepository.findByAlias(alias)
-    }
-
-    fun getAllKeys(): MutableIterable<KeyInformation> {
-        return keyRepository.findAll()
     }
 
 }

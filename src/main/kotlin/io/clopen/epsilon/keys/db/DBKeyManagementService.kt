@@ -1,5 +1,6 @@
 package io.clopen.epsilon.keys.db
 
+import io.clopen.epsilon.keys.EpsilonKey
 import io.clopen.epsilon.keys.KeyManagementConfig
 import io.clopen.epsilon.keys.KeyManagementService
 import jakarta.annotation.PostConstruct
@@ -27,7 +28,7 @@ class DBKeyManagementService @Autowired constructor(
         generateKeyIfNeeded()
     }
 
-    override fun getActiveKey(alias: String): Optional<SecretKeySpec> {
+    override fun getKey(alias: String): Optional<EpsilonKey> {
         val keyInfoOptional = keyStore.getKey(alias)
         return keyInfoOptional
             .filter { keyInfo ->
@@ -36,13 +37,23 @@ class DBKeyManagementService @Autowired constructor(
                     false
                 } else true
             }
-            .map { getKey(it) }
+            .map { EpsilonKey(alias = alias, key = getKey(it), it.algorithm )}
+    }
+
+    override fun getCurrentKey(): Optional<EpsilonKey> {
+        val keyOptional = keyStore.getCurrentKey()
+        return keyOptional.filter { keyInfo ->
+            if(isExpired(keyInfo)) {
+                log.warn("Latest key is expired ${keyInfo.alias}")
+                false
+            } else true
+        }.map { EpsilonKey(alias = it.alias, key = getKey(it), it.algorithm) }
     }
 
 
     @Scheduled(cron = "0 0 0 * * ?")
     override fun generateKeyIfNeeded() {
-        val latestKeyInfo = getLatestKeyInformation().orElse(null)
+        val latestKeyInfo = keyStore.getCurrentKey().orElse(null)
         if (latestKeyInfo == null ||
             isExpired(latestKeyInfo) ||
             Duration.between(latestKeyInfo.expiryDate, Instant.now())
@@ -50,11 +61,6 @@ class DBKeyManagementService @Autowired constructor(
         ) {
             generateKey()
         }
-    }
-
-    private fun getLatestKeyInformation(): Optional<KeyInformation> {
-        val keys = keyStore.getAllKeys()
-        return keys.minByOrNull { it.createdAt }?.let { Optional.of(it) } ?: Optional.empty()
     }
 
     private fun getKey(keyInfo: KeyInformation): SecretKeySpec {
