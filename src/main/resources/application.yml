@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: epsilon
+
+epsilon:
+  key-management:
+    keyExpiryInDays: 90
+    keyRotationThresholdInDays: 7
+    algorithm: HmacSHA256
