@@ -18,10 +18,13 @@ jobs:
         with:
           java-version: '21'
 
-      - name: Set up Kotlin 1.9.25
-        uses: actions/setup-kotlin@v1
-        with:
-          kotlin-version: '1.9.25'  # Match your Kotlin version
+      - name: Install Kotlin
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl
+          curl -s https://get.sdkman.io | bash
+          source "$HOME/.sdkman/bin/sdkman-init.sh"
+          sdk install kotlin 1.9.25
 
       - name: Build with Gradle
         run: ./gradlew build
