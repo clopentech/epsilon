@@ -25,7 +25,7 @@ jobs:
           sudo apt-get install -y curl
           curl -s https://get.sdkman.io | bash
           source "$HOME/.sdkman/bin/sdkman-init.sh"
-          sdk install kotlin 1.9.25
+          sdk install kotlin
 
       - name: Build with Gradle
         run: ./gradlew build
