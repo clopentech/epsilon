@@ -55,3 +55,21 @@ kotlin {
 tasks.withType<Test> {
 	useJUnitPlatform()
 }
+
+publishing {
+	publications {
+		create<MavenPublication>("mavenJava") {
+			from(components["java"])
+		}
+	}
+	repositories {
+		maven {
+			name = "GitHubPackages"
+			url = uri("https://maven.pkg.github.com/clopentech/epsilon")
+			credentials {
+				username = (project.findProperty("gpr.user") as String?) ?: System.getenv("GPR_USER")
+				password = (project.findProperty("gpr.token") as String?) ?: System.getenv("GHUB_PACKAGES_TOKEN")
+			}
+		}
+	}
+}
